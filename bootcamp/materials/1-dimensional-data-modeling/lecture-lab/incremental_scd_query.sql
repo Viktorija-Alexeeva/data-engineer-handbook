@@ -107,7 +107,5 @@ FROM (
 -- where player_name = 'Aaron Brooks' 
 on conflict (player_name, start_season)
 do update set
-scoring_class = excluded.scoring_class,
-is_active = excluded.is_active,
 end_season = excluded.end_season,
 current_season = excluded.current_season;
