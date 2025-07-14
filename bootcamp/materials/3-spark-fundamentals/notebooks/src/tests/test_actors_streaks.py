@@ -4,24 +4,24 @@ from chispa.dataframe_comparer import *
 from ..jobs.actors_streaks_job import do_actors_streaks_transformation
 from collections import namedtuple
 
-PlayerSeason = namedtuple("PlayerSeason", "player_name current_season scoring_class")
-PlayerScd = namedtuple("PlayerScd", "player_name scoring_class start_date end_date")
+#source schema
+Actors = namedtuple("Actors", "actorid current_year quality_class is_active")
+#target schema
+ActorsScd = namedtuple("ActorsScd", "actorid quality_class is_active start_year end_year current_year")
 
 
 def test_scd_generation(spark):
     source_data = [
-        PlayerSeason("Michael Jordan", 2001, 'Good'),
-        PlayerSeason("Michael Jordan", 2002, 'Good'),
-        PlayerSeason("Michael Jordan", 2003, 'Bad'),
-        PlayerSeason("Someone Else", 2003, 'Bad')
+        Actors("123", 1976, 'good', True),
+        Actors("123", 1977, 'good', True),
+        Actors("123", 1978, 'star', True)
     ]
     source_df = spark.createDataFrame(source_data)
 
     actual_df = do_actors_streaks_transformation(spark, source_df)
     expected_data = [
-        PlayerScd("Michael Jordan", 'Good', 2001, 2002),
-        PlayerScd("Michael Jordan", 'Bad', 2003, 2003),
-        PlayerScd("Someone Else", 'Bad', 2003, 2003)
+        ActorsScd("123", 'good', True, 1976, 1977, 1978),
+        ActorsScd("123", 'star', True, 1978, 1978, 1978)
     ]
     expected_df = spark.createDataFrame(expected_data)
-    assert_df_equality(actual_df, expected_df)
+    assert_df_equality(actual_df, expected_df, ignore_nullable=True)
