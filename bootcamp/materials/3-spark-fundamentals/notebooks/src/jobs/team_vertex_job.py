@@ -23,6 +23,7 @@ WHERE row_num = 1
 
 
 def do_team_vertex_transformation(spark, dataframe):
+    # create tempView for source table from sql query
     dataframe.createOrReplaceTempView("teams")
     return spark.sql(query)
 
