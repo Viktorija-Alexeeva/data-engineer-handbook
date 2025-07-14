@@ -1,9 +1,6 @@
 from pyspark.sql import SparkSession
 
 
-
-
-
 def do_monthly_user_site_hits_transformation(spark, dataframe, ds):
     query = f"""
     SELECT
@@ -21,9 +18,12 @@ def do_monthly_user_site_hits_transformation(spark, dataframe, ds):
 
 def main():
     ds = '2023-01-01'
+    # building spark session
     spark = SparkSession.builder \
       .master("local") \
       .appName("players_scd") \
       .getOrCreate()
+    # create df
     output_df = do_monthly_user_site_hits_transformation(spark, spark.table("monthly_user_site_hits"), ds)
+    # insert df into table
     output_df.write.mode("overwrite").insertInto("monthly_user_site_hits_agg")

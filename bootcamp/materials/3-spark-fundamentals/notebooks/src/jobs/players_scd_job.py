@@ -38,7 +38,7 @@ WITH streak_started AS (
 
 """
 
-
+# to test that the logic works as expected
 def do_player_scd_transformation(spark, dataframe):
     dataframe.createOrReplaceTempView("players")
     return spark.sql(query)
