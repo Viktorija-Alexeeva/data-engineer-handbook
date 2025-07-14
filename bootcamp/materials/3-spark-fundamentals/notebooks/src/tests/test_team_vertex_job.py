@@ -4,8 +4,9 @@ from chispa.dataframe_comparer import *
 from ..jobs.team_vertex_job import do_team_vertex_transformation
 from collections import namedtuple
 
-# create schemas (schema name, columns) from sql in job
+# create target schema (schema name, columns) from sql in job
 TeamVertex = namedtuple("TeamVertex", "identifier type properties")
+# create source schema
 Team = namedtuple("Team", "team_id abbreviation nickname city arena yearfounded")
 
 
