@@ -31,4 +31,5 @@ GROUP BY GROUPING SETS (
         (os_type),
         (device_type)
     )
+-- group by rollup (browser_type, device_type, os_type)	
 ORDER BY COUNT(1) DESC

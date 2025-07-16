@@ -1,6 +1,15 @@
+/*
+special version of state transition track:
+- new (didn't exist yesterday, active today)
+- retained (active yesterday, active today)
+- churned (active yesterday, inactive today)
+- resurrected (inactive yesterday, active today)
+- stale (inactive yesterday, inactive today)
+*/
+
 WITH yesterday AS (
     SELECT * FROM users_growth_accounting
-    WHERE date = DATE('2023-03-09')
+    WHERE date = DATE('2023-01-09')
 ),
      today AS (
          SELECT
@@ -8,7 +17,7 @@ WITH yesterday AS (
             DATE_TRUNC('day', event_time::timestamp) as today_date,
             COUNT(1)
          FROM events
-         WHERE DATE_TRUNC('day', event_time::timestamp) = DATE('2023-03-10')
+         WHERE DATE_TRUNC('day', event_time::timestamp) = DATE('2023-01-10')
          AND user_id IS NOT NULL
          GROUP BY user_id, DATE_TRUNC('day', event_time::timestamp)
      )
