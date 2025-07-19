@@ -34,7 +34,7 @@ def create_processed_events_sink_kafka(t_env):
     return table_name
 
 
-def create_processed_events_sink_postgres(t_env):
+def create_processed_events_sink_postgres(t_env): # in fact it doesn't create table. it tells Flink how schema looks like. We must create table explicitily in pgAdmin. 
     table_name = 'processed_events'
     sink_ddl = f"""
         CREATE TABLE {table_name} (
@@ -56,7 +56,7 @@ def create_processed_events_sink_postgres(t_env):
     t_env.execute_sql(sink_ddl)
     return table_name
 
-class GetLocation(ScalarFunction):
+class GetLocation(ScalarFunction):      # get location from generated API KEY
   def eval(self, ip_address):
     url = "https://api.ip2location.io"
     response = requests.get(url, params={
@@ -96,15 +96,16 @@ def create_events_source_kafka(t_env):
             headers VARCHAR,
             event_time VARCHAR,
             event_timestamp AS TO_TIMESTAMP(event_time, '{pattern}')
+            -- WATERMARK FOR event_timestamp AS event_timestamp - INTERVAL '15' SECOND   # giving a 15 second window, within which kafka fix the order of events
         ) WITH (
             'connector' = 'kafka',
-            'properties.bootstrap.servers' = '{os.environ.get('KAFKA_URL')}',
-            'topic' = '{os.environ.get('KAFKA_TOPIC')}',
-            'properties.group.id' = '{os.environ.get('KAFKA_GROUP')}',
+            'properties.bootstrap.servers' = '{os.environ.get('KAFKA_URL')}',   -- cluster of servers that kafka is running
+            'topic' = '{os.environ.get('KAFKA_TOPIC')}',                        -- like a DB table
+            'properties.group.id' = '{os.environ.get('KAFKA_GROUP')}',          -- like a DB schema
             'properties.security.protocol' = 'SASL_SSL',
             'properties.sasl.mechanism' = 'PLAIN',
             'properties.sasl.jaas.config' = 'org.apache.flink.kafka.shaded.org.apache.kafka.common.security.plain.PlainLoginModule required username=\"{kafka_key}\" password=\"{kafka_secret}\";',
-            'scan.startup.mode' = 'latest-offset',
+            'scan.startup.mode' = 'latest-offset',      -- when 1st submit flink job, will read from last recodr in kafka
             'properties.auto.offset.reset' = 'latest',
             'format' = 'json'
         );
@@ -113,22 +114,23 @@ def create_events_source_kafka(t_env):
     t_env.execute_sql(source_ddl)
     return table_name
 
-def log_processing():
+def log_processing():           # start of job
     print('Starting Job!')
-    # Set up the execution environment
+    # Set up the execution environment (so flink knows that we need streaming, not batch)
     env = StreamExecutionEnvironment.get_execution_environment()
     print('got streaming environment')
-    env.enable_checkpointing(10 * 1000)
+    env.enable_checkpointing(10 * 1000)         # checkpoint every 10 sec
     env.set_parallelism(1)
 
     # Set up the table environment
     settings = EnvironmentSettings.new_instance().in_streaming_mode().build()
     t_env = StreamTableEnvironment.create(env, environment_settings=settings)
-    t_env.create_temporary_function("get_location", get_location)
+
+    t_env.create_temporary_function("get_location", get_location)   # like UDF in Spark. 
     try:
         # Create Kafka table
-        source_table = create_events_source_kafka(t_env)
-        postgres_sink = create_processed_events_sink_postgres(t_env)
+        source_table = create_events_source_kafka(t_env)                # define the source
+        postgres_sink = create_processed_events_sink_postgres(t_env)    # define sink (destination)
         print('loading into postgres')
         t_env.execute_sql(
             f"""
