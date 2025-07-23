@@ -12,4 +12,23 @@ CREATE TABLE IF NOT EXISTS processed_events (
 
 select distinct geodata::json->>'country', count(1)
 from processed_events
-group by 1
+group by 1;
+
+
+-- for lab 2
+
+-- Create processed_events_aggregated table
+CREATE TABLE IF NOT EXISTS processed_events_aggregated (
+    event_hour TIMESTAMP(3),
+    host VARCHAR,
+    num_hits BIGINT
+);
+
+-- Create processed_events_aggregated_source table
+CREATE TABLE IF NOT EXISTS processed_events_aggregated_source (
+    event_hour TIMESTAMP(3),
+    host VARCHAR,
+    referrer VARCHAR,
+    num_hits BIGINT
+);
+

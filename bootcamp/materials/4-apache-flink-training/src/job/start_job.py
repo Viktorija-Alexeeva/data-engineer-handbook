@@ -96,7 +96,7 @@ def create_events_source_kafka(t_env):
             headers VARCHAR,
             event_time VARCHAR,
             event_timestamp AS TO_TIMESTAMP(event_time, '{pattern}')
-            -- WATERMARK FOR event_timestamp AS event_timestamp - INTERVAL '15' SECOND   # giving a 15 second window, within which kafka fix the order of events
+            WATERMARK FOR event_timestamp AS event_timestamp - INTERVAL '15' SECOND   # giving a 15 second window, within which kafka fix the order of events
         ) WITH (
             'connector' = 'kafka',
             'properties.bootstrap.servers' = '{os.environ.get('KAFKA_URL')}',   -- cluster of servers that kafka is running

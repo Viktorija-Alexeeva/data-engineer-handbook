@@ -45,7 +45,7 @@ def create_aggregated_events_referrer_sink_postgres(t_env):
     t_env.execute_sql(sink_ddl)
     return table_name
 
-def create_processed_events_source_kafka(t_env):
+def create_processed_events_source_kafka(t_env):        # instead of create_events_source_kafka from start_job
     kafka_key = os.environ.get("KAFKA_WEB_TRAFFIC_KEY", "")
     kafka_secret = os.environ.get("KAFKA_WEB_TRAFFIC_SECRET", "")
     table_name = "process_events_kafka"
@@ -77,7 +77,7 @@ def create_processed_events_source_kafka(t_env):
     return table_name
 
 
-def log_aggregation():
+def log_aggregation():      # start of job
     # Set up the execution environment
     env = StreamExecutionEnvironment.get_execution_environment()
     env.enable_checkpointing(10)
@@ -94,7 +94,7 @@ def log_aggregation():
         aggregated_table = create_aggregated_events_sink_postgres(t_env)
         aggregated_sink_table = create_aggregated_events_referrer_sink_postgres(t_env)
         t_env.from_path(source_table)\
-            .window(
+            .window(                        # define a flink windown tumbling (opened every 5 min)
             Tumble.over(lit(5).minutes).on(col("window_timestamp")).alias("w")
         ).group_by(
             col("w"),
